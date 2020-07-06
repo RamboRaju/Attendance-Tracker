@@ -1,0 +1,18 @@
+<apex:page sidebar="false" >
+    <apex:includeLightning />
+     <div id="attence"></div> 
+    <script>
+    	console.log('Hello Vf page');
+    	 $Lightning.use("c:AttendanceApp", function() {
+             $Lightning.createComponent("c:Attendance",
+             {
+                 
+             },
+             attence,                           
+             function(component) {
+                 //component.set("v.accId" , '{!$CurrentPage.parameters.recId}');
+                 console.log('Hello Vf page copmonent');
+            });
+         });
+   </script>
+</apex:page>

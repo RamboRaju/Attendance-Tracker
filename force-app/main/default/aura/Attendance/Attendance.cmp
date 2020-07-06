@@ -1,0 +1,172 @@
+<aura:component controller="ContactAuraController" implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global" >
+	<!--Declare Event Handlers--> 
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
+     
+    <!--Declare Attributes-->
+    <aura:attribute name="contactList" type="list" />   
+    <aura:attribute name="isSelectAll" type="boolean" default="false"/>
+    
+    <aura:attribute name="isCommunity" type="boolean" default="false"/>
+    <aura:attribute name="isInstitution" type="boolean" default="false"/>
+    <aura:attribute name="isPrograms" type="boolean" default="false"/>
+    <aura:attribute name="isProgramCohort" type="boolean" default="false"/>
+    
+    <aura:attribute name="showSessionAndConact" type="boolean" default="false"/>
+
+    <aura:attribute name="selectedCommunity" type="sObject" default="{}"/>
+    <aura:attribute name="selectedInstitution" type="sObject" default="{}"/>
+    <aura:attribute name="selectedPrograms" type="sObject" default="{}"/>
+    <aura:attribute name="selectedProgramCohort" type="sObject" default="{}"/>
+    <aura:attribute name="sessionField" type="Object" default="{}"/>
+    
+    <aura:attribute name="selectedSessionType" type="string" default=""/>
+    <aura:attribute name="selectedStaff" type="string" default=""/>
+    
+    <aura:attribute name="errorMsg" type="string" default=""/>
+    <aura:attribute name="isError" type="boolean" default="false"/>
+    
+    <aura:attribute name="objectIconList" type="Object" default="{}"/>
+    
+        
+    <div style="background:white" class="slds-p-left_xx-small slds-p-right_xx-small">
+        <div class="slds-grid slds-wrap slds-gutters slds-grid--align-center slds-m-bottom_x-small" >
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-large-size_8-of-12">
+                <aura:if isTrue="{!v.isError}">
+                    <c:ToastComponent Message = "{!v.errorMsg}" isError = "{!v.isError}"/>
+                </aura:if>            
+            </div>
+        </div>
+        
+        <h3 style = "background: lightsalmon;" class="slds-section-title--divider">Session Type</h3>
+        <div class="slds-grid slds-wrap slds-gutters slds-grid--align-center" >
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12 slds-large-size_2-of-12"></div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-large-size_8-of-12">
+                <lightning:select name="select-session"  aura:id="selectSession" onchange="{!c.showSession}" label="Session Type" required="true">
+                    <option value="">--None--</option>
+                    <option value="Community">Community</option>
+                    <option value="Institution">Institution</option>
+                    <option value="Programs">Programs</option>  
+                    <option value="Program Cohort">Program Cohort</option>
+                </lightning:select>
+                
+                <aura:if isTrue="{!v.isCommunity}">
+                    <c:customLookup objectAPIName="Community__c" sessionType="{!v.selectedSessionType}" IconName="{!v.objectIconList.communityIcon}" label="Community" selectedRecord="{!v.selectedCommunity}"/>
+                    <c:customLookup objectAPIName="Program__c" sessionType="{!v.selectedSessionType}" IconName="{!v.objectIconList.programIcon}" label="Program" selectedRecord="{!v.selectedPrograms}"/>
+                    <div>
+                        <br/>
+                        <lightning:button label="Next" class="slds-button_brand slds-align_absolute-center slds-m-bottom_x-small" onclick="{!c.handleAddContacts }"  />
+                    </div>
+                </aura:if> 
+                <aura:if isTrue="{!v.isInstitution}">
+                    <c:customLookup objectAPIName="Institution__c" sessionType="{!v.selectedSessionType}" IconName="{!v.objectIconList.schoolIcon}" label="Institutions" selectedRecord="{!v.selectedInstitution}"/>
+                    <c:customLookup objectAPIName="Program__c" sessionType="{!v.selectedSessionType}" IconName="{!v.objectIconList.programIcon}" label="Program" selectedRecord="{!v.selectedPrograms}"/>
+                    <div>
+                        <br/>
+                        <lightning:button label="Next" class="slds-button_brand slds-align_absolute-center slds-m-bottom_x-small" onclick="{!c.handleAddContacts }"  />
+                    </div>
+                </aura:if> 
+                <aura:if isTrue="{!v.isPrograms}">
+                    <c:customLookup objectAPIName="Program__c" sessionType="{!v.selectedSessionType}" IconName="{!v.objectIconList.programIcon}" label="Program" selectedRecord="{!v.selectedPrograms}"/>
+                    <div>
+                        <br/>
+                        <lightning:button label="Next" class="slds-button_brand slds-align_absolute-center slds-m-bottom_x-small" onclick="{!c.handleAddContacts }"  />
+                    </div>
+                </aura:if>
+                
+                <aura:if isTrue="{!v.isProgramCohort}">
+                    <c:customLookup objectAPIName="Program_Cohort__c" sessionType="{!v.selectedSessionType}" IconName="{!v.objectIconList.programCohortIcon}" label="Program Cohort" selectedRecord="{!v.selectedProgramCohort}"/>
+                    <c:customLookup objectAPIName="Program__c" sessionType="{!v.selectedSessionType}" IconName="{!v.objectIconList.programIcon}" label="Program" selectedRecord="{!v.selectedPrograms}"/>
+                    <div>
+                        <br/>
+                        <lightning:button label="Next" class="slds-button_brand slds-align_absolute-center slds-m-bottom_x-small" onclick="{!c.handleAddContacts }"  />
+                        <br/>
+                    </div>
+                </aura:if>     
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12 slds-large-size_2-of-12"></div>
+        </div>
+        
+        <aura:if isTrue="{!v.showSessionAndConact}"> 
+            <h3 style = "background: lightsalmon;" class="slds-section-title--divider">Session Fields</h3>
+            <div class="slds-grid slds-wrap slds-gutters slds-grid--align-center" >
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-large-size_4-of-12">
+                    <lightning:input type="date" name="date" label="Date" value="{!v.sessionField.sessionDate}" />
+                </div>
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-large-size_4-of-12">
+                    <aura:if isTrue="{!v.sessionField.showPrimarySubject}">
+                        <c:customLookup objectAPIName="Subject__c" programRecordId="{!v.selectedPrograms.Id}" IconName="{!v.objectIconList.subjectIcon}" label="Primary Subject" selectedRecord="{!v.sessionField.primarySubject}"/>
+                    </aura:if>              
+                </div>     
+            </div>
+            <div class="slds-grid slds-wrap slds-gutters slds-grid--align-center " >
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-large-size_4-of-12">
+                    <aura:if isTrue="{!v.sessionField.showSecondarySubject}">
+                        <c:customLookup objectAPIName="Subject__c" programRecordId="{!v.selectedPrograms.Id}" IconName="{!v.objectIconList.subjectIcon}" label="Secondary Subject" selectedRecord="{!v.sessionField.secondarySubject}"/>
+                    </aura:if>
+                </div>
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-large-size_4-of-12">
+                    <lightning:select name="cStat" label="Staff" 
+                                      value="{!v.sessionField.staff}" aura:id="staffPicklist" >
+                        <option value="">--None--</option>
+                        <aura:iteration items="{!v.sessionField.staffList}" var="opt">
+                            <option value="{!opt.pickListValue}">{!opt.pickListLabel}</option>
+                        </aura:iteration>
+                    </lightning:select>
+                    
+                </div>
+            </div>
+            <div class="slds-grid slds-wrap slds-gutters slds-grid--align-center" >
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-large-size_4-of-12">
+                    <lightning:input name="submitted-by-other" label="Submitted By Other" value="{!v.sessionField.submittedByOther}" />
+                </div>
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-large-size_4-of-12">
+                    <lightning:input type="number" name="parents" label="Parents" value="{!v.sessionField.parents}" />
+                </div>
+            </div>
+            <div class="slds-grid slds-wrap slds-gutters slds-grid--align-center slds-m-bottom_x-small" >
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-large-size_8-of-12">
+                    <lightning:textarea name="comments" label="Comments" value="{!v.sessionField.comments}" />
+                </div>
+            </div>
+            
+            <h3 style = "background: lightsalmon;" class="slds-section-title--divider">Select all who attended:</h3>
+            <!--Contact List Table-->
+            <table class="slds-table slds-table--bordered slds-table--cell-buffer" role="grid">      
+                <thead>  
+                    <tr class="slds-text-title--caps">
+                        <td>           
+                            <label class="slds-checkbox">
+                                <ui:inputCheckbox value="{!v.isSelectAll}" change="{!c.handleSelectAllContact}" aura:id="selectAll"/>
+                                <span class="slds-checkbox--faux" />
+                                <span class="slds-form-element__label"></span>
+                            </label>
+                        </td>
+                        <td scope="col">
+                            <div class="slds-truncate" title="Name Age Gender">Name Age Gender</div>
+                        </td>
+                    </tr>
+                </thead>
+                <tbody>        
+                    <aura:iteration items="{!v.contactList}" var="con">
+                        <tr>
+                            <td>
+                                <label class="slds-checkbox">
+                                    <ui:inputCheckbox aura:id="checkContact" change="{!c.handleSelectedContacts}" value="{!con.selected}" text="{!con}"/>
+                                    <span class="slds-checkbox--faux" />
+                                    <span class="slds-form-element__label"></span>
+                                </label>
+                            </td>
+                            <td scope="row">
+                                <div class="slds-truncate" title="{!con.con.Name_Age_Gender__c}">{!con.con.Name_Age_Gender__c}</div>
+                            </td>
+                        </tr>
+                    </aura:iteration>
+                </tbody>
+            </table>
+            <div>
+                <br/>
+                <lightning:button label="Submit" class="slds-button_brand slds-align_absolute-center slds-m-bottom_x-small" onclick="{!c.handleSubmit }"  />
+            </div>
+        </aura:if>
+    </div>
+</aura:component>
